@@ -9,6 +9,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- Supabase (banco de dados do painel). "defer" faz carregar sem atrasar a página. Se falhar, o site continua funcionando com os dados de exemplo. -->
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script defer src="js/banco.js"></script>
 <style>
 :root{
   --bg:#EDE8D0; --red:#c8101a; --red-dark:#9a0a12; --card:#f7f3e2; --card-2:#e2dab8;
@@ -117,6 +120,8 @@ section{padding:88px 0;position:relative}
 .work .ph{aspect-ratio:4/5;border-radius:0;border:0}
 .work-info{padding:12px 14px 14px}
 .work-info h3{font-size:1.05rem;margin-bottom:4px}
+a.work{display:block;text-decoration:none;color:inherit}
+.work-info small{display:block;margin-top:4px;font-size:.78rem;color:var(--muted)}
 .work-info span{font-size:.8rem;color:var(--brown);font-weight:700;text-transform:uppercase;letter-spacing:.1em}
 @keyframes pop{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 
@@ -158,6 +163,7 @@ input:focus,textarea:focus{outline:3px solid var(--red);outline-offset:1px;borde
 textarea{min-height:140px;resize:vertical}
 .thanks{display:none;background:#e1f0e0;border:1px solid #2e7d47;color:#1c5a2c;padding:18px;border-radius:8px;margin-top:16px}
 .thanks.show{display:block}
+.thanks.erro{background:#f9dcdc;border-color:#e3a3a6;color:#8a0c14}
 .direct{display:grid;gap:14px}
 .direct p{color:var(--muted);margin-bottom:6px}
 .direct .btn{justify-content:flex-start;width:100%}
@@ -352,14 +358,16 @@ footer{border-top:4px solid var(--brown);padding:40px 0;background:var(--alt)}
     <p class="sec-sub">Conte sobre a sua marca e o seu produto. Eu respondo rapidinho.</p>
     <div class="contact-grid">
       <div>
-        <!-- O formulário mostra a confirmação na tela, mas ainda não envia os dados para lugar nenhum.
-             Para receber as mensagens, conecte a um serviço de formulário (ex.: Formspree) trocando o preventDefault por um fetch. -->
+        <!-- Este formulário grava o contato na tabela "marcas" do seu painel (situação Lead). Veja o script no fim do arquivo. -->
         <form class="contact" id="contactForm" novalidate>
-          <div class="field"><label for="nome">Nome</label><input id="nome" name="nome" type="text" autocomplete="name" placeholder="Seu nome" required></div>
-          <div class="field"><label for="email">E-mail</label><input id="email" name="email" type="email" autocomplete="email" placeholder="seuemail@email.com" required></div>
-          <div class="field"><label for="msg">Mensagem</label><textarea id="msg" name="msg" placeholder="Conte o que você precisa" required></textarea></div>
+          <div class="field"><label for="nome">Nome</label><input id="nome" name="nome" type="text" autocomplete="name" placeholder="Seu nome" maxlength="200" required></div>
+          <div class="field"><label for="email">E-mail</label><input id="email" name="email" type="email" autocomplete="email" placeholder="seuemail@email.com" maxlength="200" required></div>
+          <div class="field"><label for="msg">Mensagem</label><textarea id="msg" name="msg" placeholder="Conte o que você precisa" maxlength="3000" required></textarea></div>
+          <!-- Campo armadilha contra robôs: pessoas não veem nem preenchem -->
+          <input type="text" name="site" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
           <button class="btn btn-red" type="submit">Enviar mensagem</button>
           <p class="thanks" id="thanks" role="status" tabindex="-1"><strong>Mensagem enviada!</strong> Obrigada pelo contato. Eu respondo em breve.</p>
+          <p class="thanks erro" id="erroForm" role="alert" tabindex="-1"><strong>Não consegui enviar agora.</strong> Fale comigo pelo WhatsApp ou pelo e-mail aqui ao lado.</p>
         </form>
       </div>
       <div class="direct">
@@ -482,8 +490,12 @@ function bloco(capa, alt, legenda, classe){
   $('#marquee').innerHTML = `<ul>${li}</ul><ul aria-hidden="true">${li}</ul>`;
 })();
 
-/* Destaques */
-$('#featured').innerHTML = DESTAQUES.map((d,i) => `
+/* Só aceita endereços que começam com http:// ou https:// (evita links perigosos) */
+const seguro = u => /^https?:\/\//i.test(u || '') ? u : '';
+
+/* Destaques. Os três cards podem vir do array DESTAQUES (exemplo) ou do painel (tabela videos). */
+function desenharDestaques(lista){
+  $('#featured').innerHTML = lista.map(d => `
   <a class="feat reveal" href="${esc(d.link)}" target="_blank" rel="noopener" aria-label="Assistir: ${esc(d.titulo)}, ${esc(d.numero)} ${esc(d.rotulo)}">
     <div class="ph" style="aspect-ratio:9/16;border-radius:0;border:0">
       ${d.capa ? `<img src="${esc(d.capa)}" alt="Capa do vídeo ${esc(d.titulo)}" loading="lazy">` : `<span class="cap">capa do vídeo 9:16</span>`}
@@ -491,27 +503,87 @@ $('#featured').innerHTML = DESTAQUES.map((d,i) => `
     </div>
     <div class="feat-body">
       <div class="big">${esc(d.numero)}</div>
-      <div class="big-label">${esc(d.rotulo)}</div>
+      ${d.rotulo ? `<div class="big-label">${esc(d.rotulo)}</div>` : ''}
       <h3>${esc(d.titulo)}</h3>
-      <p>${esc(d.contexto)}</p>
+      ${d.contexto ? `<p>${esc(d.contexto)}</p>` : ''}
     </div>
   </a>`).join('');
-document.querySelectorAll('.feat').forEach(a => a.addEventListener('click', e => { if(a.getAttribute('href') === '#') e.preventDefault(); }));
+  $('#featured').querySelectorAll('.feat').forEach(a => a.addEventListener('click', e => { if(a.getAttribute('href') === '#') e.preventDefault(); }));
+}
+desenharDestaques(DESTAQUES);
 
-/* Trabalhos e filtros */
-const nichos = ["Todos", ...new Set(TRABALHOS.map(t => t.nicho))];
+/* Trabalhos e filtros. A lista pode vir do array TRABALHOS (exemplo) ou do painel (tabela videos). */
 const filtros = $('#filters'), galeria = $('#works');
+let trabalhosAtuais = TRABALHOS;
 function desenhar(nicho){
-  galeria.innerHTML = TRABALHOS.filter(t => nicho === 'Todos' || t.nicho === nicho).map(t => `
-    <article class="work" tabindex="0">
+  galeria.innerHTML = trabalhosAtuais.filter(t => nicho === 'Todos' || t.nicho === nicho).map(t => {
+    const miolo = `
       ${bloco(t.capa, 'Trabalho: ' + t.titulo, 'foto ou vídeo do trabalho 4:5', '')}
-      <div class="work-info"><h3>${esc(t.titulo)}</h3><span>${esc(t.nicho)}</span></div>
-    </article>`).join('');
+      <div class="work-info"><h3>${esc(t.titulo)}</h3><span>${esc(t.nicho)}</span>${t.formato || t.marca ? `<small>${esc([t.formato, t.marca].filter(Boolean).join(' · '))}</small>` : ''}</div>`;
+    return t.link ? `<a class="work" href="${esc(t.link)}" target="_blank" rel="noopener">${miolo}</a>` : `<article class="work" tabindex="0">${miolo}</article>`;
+  }).join('');
   filtros.querySelectorAll('.chip').forEach(b => b.setAttribute('aria-pressed', b.dataset.n === nicho));
 }
-filtros.innerHTML = nichos.map(n => `<button class="chip" type="button" data-n="${esc(n)}" aria-pressed="false">${esc(n)}</button>`).join('');
+function iniciarTrabalhos(lista){
+  trabalhosAtuais = lista;
+  const nichos = ["Todos", ...new Set(lista.map(t => t.nicho))];
+  filtros.innerHTML = nichos.map(n => `<button class="chip" type="button" data-n="${esc(n)}" aria-pressed="false">${esc(n)}</button>`).join('');
+  desenhar('Todos');
+}
 filtros.addEventListener('click', e => { const b = e.target.closest('.chip'); if(b) desenhar(b.dataset.n); });
-desenhar('Todos');
+iniciarTrabalhos(TRABALHOS);
+
+/* Painel: lê os vídeos cadastrados no admin (tabela videos) e troca os exemplos por eles.
+   Se não houver internet, se o banco ainda não foi criado ou se não houver nenhum vídeo visível,
+   o site continua mostrando os exemplos acima. */
+async function carregarVideos(){
+  if(!window.db) return;
+  try{
+    const r = await window.db.rpc('videos_publicos');
+    if(r.error || !Array.isArray(r.data) || !r.data.length) return;
+    iniciarTrabalhos(r.data.map(v => ({titulo:v.titulo, nicho:v.nicho || 'Outros', capa:seguro(v.capa), link:seguro(v.link), formato:v.formato || '', marca:v.marca || ''})));
+    const dest = r.data.filter(v => (v.destaque || '').trim()).slice(0, 3).map(v => {
+      const p = v.destaque.trim().split(/\s+/);
+      return {link:seguro(v.link) || '#', capa:seguro(v.capa), numero:p[0], rotulo:p.slice(1).join(' '), titulo:v.titulo, contexto:v.marca || ''};
+    });
+    if(dest.length){ desenharDestaques(dest); document.querySelectorAll('#featured .reveal').forEach(el => io.observe(el)); }
+    else { $('#destaques').hidden = true; const l = document.querySelector('a[href="#destaques"]'); if(l && l.parentNode) l.parentNode.hidden = true; }
+  }catch(e){ /* mantém os exemplos */ }
+}
+
+/* Registro simples de visita (tabela visitas): uma por sessão, sem serviço de fora e sem pedir nada ao visitante.
+   Não conta quando você (logada no painel) abre o site, nem em localhost. */
+function nomeOrigem(h){
+  if(/instagram\.com$/.test(h)) return 'Instagram';
+  if(/whatsapp\.com$|^wa\.me$/.test(h)) return 'WhatsApp';
+  if(/(^|\.)google\./.test(h)) return 'Google';
+  if(/tiktok\.com$/.test(h)) return 'TikTok';
+  if(/facebook\.com$|^fb\.com$|^l\.facebook\.com$/.test(h)) return 'Facebook';
+  if(/youtube\.com$|^youtu\.be$/.test(h)) return 'YouTube';
+  if(/linkedin\.com$|^lnkd\.in$/.test(h)) return 'LinkedIn';
+  if(/^t\.co$|twitter\.com$|^x\.com$/.test(h)) return 'X';
+  return h;
+}
+function registrarVisita(){
+  try{
+    const h = location.hostname;
+    if(!window.db || !h || h === 'localhost' || h === '127.0.0.1') return;
+    if(sessionStorage.getItem('visitaRegistrada')) return;
+    sessionStorage.setItem('visitaRegistrada', '1');
+    let origem = 'Direto';
+    const utm = new URLSearchParams(location.search).get('utm_source');
+    if(utm) origem = utm.slice(0, 60);
+    else if(document.referrer){
+      const ref = new URL(document.referrer).hostname.replace(/^www\./, '');
+      if(ref && ref !== h) origem = nomeOrigem(ref);
+    }
+    window.db.auth.getSession().then(s => {
+      if(s && s.data && s.data.session) return;
+      return window.db.from('visitas').insert({pagina:location.pathname.slice(0, 300), origem:origem.slice(0, 200)});
+    }).catch(() => {});
+  }catch(e){}
+}
+document.addEventListener('DOMContentLoaded', () => { carregarVideos(); registrarVisita(); });
 
 /* Serviços */
 $('#services').innerHTML = SERVICOS.map((s,i) => `
@@ -561,13 +633,29 @@ burger.addEventListener('click', () => {
 });
 menu.addEventListener('click', e => { if(e.target.closest('a')) fecharMenu(); });
 
-/* Formulário de contato */
-$('#contactForm').addEventListener('submit', e => {
+/* Formulário de contato: grava o contato na tabela marcas do painel, como situação "lead".
+   A confirmação só aparece se de fato gravou. Se falhar, avisa e mostra os outros caminhos. */
+$('#contactForm').addEventListener('submit', async e => {
   e.preventDefault();
   const f = e.target;
   if(!f.checkValidity()){ f.reportValidity(); return; }
-  f.reset();
-  const t = $('#thanks'); t.classList.add('show'); t.focus();
+  const ok = $('#thanks'), erro = $('#erroForm'), btn = f.querySelector('button[type=submit]');
+  ok.classList.remove('show'); erro.classList.remove('show');
+  let gravou = false;
+  if(f.elements.site.value){ gravou = true; /* robô preencheu o campo armadilha: finge que deu certo e não grava */ }
+  else if(window.db){
+    btn.disabled = true;
+    try{
+      const r = await window.db.from('marcas').insert({
+        nome: f.elements.nome.value.trim(), email: f.elements.email.value.trim(), obs: f.elements.msg.value.trim(),
+        situacao: 'lead', ultimo_contato: new Date().toLocaleDateString('sv-SE')
+      });
+      gravou = !r.error;
+    }catch(_){ gravou = false; }
+    btn.disabled = false;
+  }
+  if(gravou){ f.reset(); ok.classList.add('show'); ok.focus(); }
+  else { erro.classList.add('show'); erro.focus(); }
 });
 
 /* Ano automático */
