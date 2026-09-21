@@ -67,6 +67,13 @@ svg.ic{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;str
 .meta-n{margin:4px 0 8px}
 .meta-n b{font-size:1.3rem;color:var(--red)}
 .add-passo{display:flex;gap:6px;margin-top:10px}
+.cars{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.car{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px;min-width:0}
+.slides{margin:0 0 8px;padding-left:20px;font-size:.88rem}
+.slides li{margin-bottom:3px;overflow-wrap:anywhere}
+.legenda{margin-top:8px;padding:8px 10px;background:var(--alt);border-radius:8px;font-size:.85rem;overflow-wrap:anywhere}
+.legenda small{display:block;font-weight:700;text-transform:uppercase;letter-spacing:.06em;font-size:.68rem;opacity:.8}
+.cs-ideia{background:#dcd6c4;color:#5a4d36}.cs-produzindo{background:#f7e3a6;color:#6b4a00}.cs-pronto{background:#d7e6f7;color:#1d4a7a}.cs-postado{background:#d3ecd3;color:#1c5a2c}
 .link-b{background:none;border:0;padding:0;font:inherit;color:var(--red);text-decoration:underline}
 .vazio{padding:20px;text-align:center;border:1px dashed var(--line);border-radius:8px;opacity:.9}
 .aviso{background:var(--amarelo-bg);color:var(--amarelo);border:1px solid #e0c56a;border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:.85rem}
@@ -250,6 +257,8 @@ textarea.roteiro{min-height:130px;margin-bottom:14px}
       <div class="grupo">Meu site</div>
       <button class="item" data-acao="ir" data-aba="portfolio"><span data-ic="portfolio"></span>Portfólio</button>
       <button class="item" data-acao="ir" data-aba="marcas"><span data-ic="marcas"></span>Marcas</button>
+      <div class="grupo">Instagram</div>
+      <button class="item" data-acao="ir" data-aba="carrosseis"><span data-ic="carrosseis"></span>Carrosséis</button>
       <div class="grupo">Minha rotina</div>
       <button class="item" data-acao="ir" data-aba="calendario"><span data-ic="calendario"></span>Calendário</button>
       <button class="item" data-acao="ir" data-aba="campanhas"><span data-ic="campanhas"></span>Campanhas</button>
@@ -307,6 +316,7 @@ var seguro = function(u){ return /^https?:\/\//i.test(u || '') ? u : ''; };
 var rico = function(s){ return esc(s).replace(/&lt;(\/?)(b|em)&gt;/g, '<$1$2>'); }; /* deixa só negrito e itálico da biblioteca */
 
 var ICONES = {
+  carrosseis:'<rect x="6" y="5" width="12" height="14" rx="2"/><path d="M3 8v8M21 8v8"/>',
   painel:'<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>',
   objetivos:'<path d="M4 21V4"/><path d="M4 4h13l-2 4 2 4H4"/>',
   portfolio:'<rect x="3" y="4" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z"/><path d="M8 21h8"/>',
@@ -367,9 +377,9 @@ function baixarCSV(nome, linhas){
 /* ============================================================
    3) DADOS
    ============================================================ */
-var S = {videos:[], marcas:[], calendario:[], campanhas:[], marcados:{}, visitas:[], metas:[], projetos:[]};
+var S = {videos:[], marcas:[], calendario:[], campanhas:[], marcados:{}, visitas:[], metas:[], projetos:[], carrosseis:[]};
 var falta = {}; /* tabelas que não consegui ler, com o motivo */
-var E = {aba:'painel', marcas:{busca:'', sit:''}, cal:{ano:0, mes:0, tipo:''}, camp:{filtro:'todas', busca:'', ord:'prazo', dir:1}, chk:{sub:'checklist', abertas:{}, estilo:'', nicho:0, rev:{}}};
+var E = {aba:'painel', car:{filtro:''}, marcas:{busca:'', sit:''}, cal:{ano:0, mes:0, tipo:''}, camp:{filtro:'todas', busca:'', ord:'prazo', dir:1}, chk:{sub:'checklist', abertas:{}, estilo:'', nicho:0, rev:{}}};
 var STATUS = ['Briefing','Roteiro','Aprovação Roteiro','Gravação','Edição','Aprovado','Entregue'];
 var SIT = [['lead','Lead'],['conversando','Conversando'],['cliente','Cliente'],['parada','Parada']];
 var TIPOS_CAL = [['gravar','Gravar'],['editar','Editar'],['postar','Postar']];
@@ -444,7 +454,7 @@ function abrirForm(cfg){
     if(c.tipo === 'checkbox') return '<label class="chk' + (c.cheio ? ' cheio' : '') + '"><input type="checkbox" name="' + c.k + '"' + (val ? ' checked' : '') + '> ' + esc(c.rot) + '</label>';
     var inp;
     if(c.tipo === 'select') inp = '<select ' + at + '>' + c.op.map(function(o){ return '<option value="' + esc(o[0]) + '"' + (String(val) === String(o[0]) ? ' selected' : '') + '>' + esc(o[1]) + '</option>'; }).join('') + '</select>';
-    else if(c.tipo === 'textarea') inp = '<textarea ' + at + ' rows="3">' + esc(val) + '</textarea>';
+    else if(c.tipo === 'textarea') inp = '<textarea ' + at + ' rows="' + (c.linhas || 3) + '">' + esc(val) + '</textarea>';
     else inp = '<input type="' + (c.tipo || 'text') + '" ' + at + ' value="' + esc(val) + '"' + (c.passo ? ' step="' + c.passo + '"' : '') + (c.lista ? ' list="' + id + '_l"' : '') + '>' +
       (c.lista ? '<datalist id="' + id + '_l">' + c.lista.map(function(x){ return '<option value="' + esc(x) + '">'; }).join('') + '</datalist>' : '');
     return '<div class="cp' + (c.cheio ? ' cheio' : '') + '"><label for="' + id + '_' + c.k + '">' + esc(c.rot) + (c.req ? ' *' : '') + '</label>' + inp + (c.dica ? '<small>' + esc(c.dica) + '</small>' : '') + '</div>';
@@ -975,9 +985,58 @@ function formProjeto(id){
 async function salvarPassos(id, passos){ var r = await atualizar('projetos', id, {passos:passos}); if(r) renderizar(); return r; }
 
 /* ============================================================
+   9C) ABA CARROSSÉIS (planejador: slides, legenda, status e data)
+   ============================================================ */
+var STATUS_CAR = [['ideia','Ideia'],['produzindo','Produzindo'],['pronto','Pronto'],['postado','Postado']];
+function vCarrosseis(){
+  var f = E.car.filtro, lista = S.carrosseis.filter(function(c){ return !f || c.status === f; });
+  var hj = hoje();
+  var chips = '<button class="chip" data-acao="car-filtro" data-f="" aria-pressed="' + !f + '">Todos</button>' + STATUS_CAR.map(function(s){
+    var n = S.carrosseis.filter(function(c){ return c.status === s[0]; }).length;
+    return '<button class="chip" data-acao="car-filtro" data-f="' + s[0] + '" aria-pressed="' + (f === s[0]) + '">' + s[1] + ' (' + n + ')</button>';
+  }).join('');
+  var cards = lista.map(function(c){
+    var slides = Array.isArray(c.slides) ? c.slides : [];
+    var atraso = c.data_post && c.data_post < hj && c.status !== 'postado';
+    var st = STATUS_CAR.find(function(s){ return s[0] === c.status; });
+    return '<article class="car"><div class="meta-t"><b>' + esc(c.titulo) + '</b>' + (c.exemplo ? '<span class="ex">Exemplo</span>' : '') +
+      '<button class="ic-btn" data-acao="car-editar" data-id="' + esc(c.id) + '" aria-label="Editar carrossel">' + ic('editar') + '</button></div>' +
+      '<div style="margin-bottom:8px"><span class="pilula cs-' + esc(c.status) + '">' + esc(st ? st[1] : c.status) + '</span>' + (c.tema ? ' <span class="muted">' + esc(c.tema) + '</span>' : '') +
+      (c.data_post ? ' <span class="muted">· postar em ' + br(c.data_post) + '</span>' : '') + (atraso ? '<span class="etq atraso">Atrasado</span>' : '') + '</div>' +
+      (slides.length ? '<ol class="slides">' + slides.map(function(s){ return '<li>' + esc(s) + '</li>'; }).join('') + '</ol>' : '<div class="muted" style="font-size:.85rem">Sem slides ainda. Clique no lápis para escrever.</div>') +
+      (c.legenda ? '<div class="legenda"><small>Legenda</small>' + esc(c.legenda) + '</div>' : '') + '</article>';
+  }).join('');
+  return avisoFalta(['carrosseis']) +
+    '<div class="barra"><div class="chips">' + chips + '</div><span class="espaco"></span><button class="btn cheio" data-acao="car-novo">' + ic('mais') + 'Adicionar carrossel</button></div>' +
+    (lista.length ? '<div class="cars">' + cards + '</div>' : '<div class="vazio">' + (S.carrosseis.length ? 'Nenhum carrossel com esse status.' : 'Nenhum carrossel ainda. Clique em "Adicionar carrossel" e escreva o primeiro, slide por slide.') + '</div>');
+}
+function formCarrossel(id){
+  var c = id ? achar('carrosseis', id) : null;
+  var v = c ? Object.assign({}, c, {slides:(Array.isArray(c.slides) ? c.slides : []).join('\n')}) : {status:'ideia', slides:''};
+  abrirForm({
+    titulo: c ? 'Editar carrossel' : 'Adicionar carrossel',
+    valores: v,
+    campos: [
+      {k:'titulo', rot:'Título do carrossel', req:true, cheio:true},
+      {k:'tema', rot:'Tema ou nicho', lista:['Beleza','Tech']},
+      {k:'status', rot:'Status', tipo:'select', op:STATUS_CAR},
+      {k:'data_post', rot:'Data para postar (opcional)', tipo:'date'},
+      {k:'slides', rot:'Slides', tipo:'textarea', linhas:7, cheio:true, dica:'Um slide por linha. A primeira linha é a capa.'},
+      {k:'legenda', rot:'Legenda', tipo:'textarea', linhas:4, cheio:true}
+    ],
+    onSalvar: async function(o){
+      o.slides = (o.slides || '').split('\n').map(function(s){ return s.trim(); }).filter(Boolean);
+      return c ? !!(await atualizar('carrosseis', id, o)) : !!(await inserir('carrosseis', o));
+    },
+    onApagar: c ? function(){ return apagar('carrosseis', id); } : null
+  });
+}
+
+/* ============================================================
    10) NAVEGAÇÃO E EVENTOS
    ============================================================ */
 var ABAS = {
+  carrosseis:{t:'Carrosséis', v:vCarrosseis},
   painel:{t:'Painel', v:vPainel},
   objetivos:{t:'Objetivos', v:vObjetivos},
   portfolio:{t:'Portfólio', v:vPortfolio, tabs:['videos','visitas'], depois:null},
@@ -1018,6 +1077,9 @@ var ACOES = {
     var v = achar('videos', b.dataset.id); if(!v) return;
     if(await atualizar('videos', v.id, {visivel:!v.visivel})){ renderizar(); toast(v.visivel ? 'Agora aparece no site' : 'Escondido do site'); }
   },
+  'car-novo':function(){ formCarrossel(); },
+  'car-editar':function(b){ formCarrossel(b.dataset.id); },
+  'car-filtro':function(b){ E.car.filtro = b.dataset.f; renderizar(); },
   'meta-nova':function(){ formMeta(); },
   'meta-editar':function(b){ formMeta(b.dataset.id); },
   'proj-novo':function(){ formProjeto(); },
@@ -1113,7 +1175,7 @@ async function iniciar(sessao){
   document.body.classList.remove('checando');
   $('#conteudo').innerHTML = '<div class="vazio">Carregando os seus dados...</div>';
   document.querySelectorAll('.item').forEach(function(b){ if(b.dataset.aba === E.aba) b.setAttribute('aria-current', 'page'); });
-  await Promise.all(['videos', 'marcas', 'calendario', 'campanhas', 'marcados', 'visitas', 'metas', 'projetos'].map(carregar));
+  await Promise.all(['videos', 'marcas', 'calendario', 'campanhas', 'marcados', 'visitas', 'metas', 'projetos', 'carrosseis'].map(carregar));
   renderizar();
 }
 </script>
