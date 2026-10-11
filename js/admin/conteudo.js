@@ -227,7 +227,7 @@
 
     var PLU = {manual:'manuais', api:'automáticos', importacao:'importados'};
     var orig = Object.keys(c.origens).map(function(o){ return plural(c.origens[o], 'registro ' + rotOrigem(o), 'registros ' + (PLU[o] || o)); }).join(', ');
-    h += '<div class="aviso" style="background:var(--card);color:var(--brown);border-color:var(--line)"><b>Última atualização dos dados:</b> ' + (c.ultimaAtualizacao ? dataHora(c.ultimaAtualizacao) : 'nenhuma métrica registrada ainda') + (orig ? ' · <b>Origem:</b> ' + esc(orig) : '') + '</div>';
+    h += '<p style="margin:0 0 14px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--card);font-size:.85rem"><strong>Última atualização dos dados:</strong> ' + (c.ultimaAtualizacao ? dataHora(c.ultimaAtualizacao) : 'nenhuma métrica registrada ainda') + (orig ? ' · <strong>Origem:</strong> ' + esc(orig) : '') + '</p>';
 
     h += '<div class="faixa-num">' +
       '<div class="num"><small>Vídeos publicados</small><b>' + c.pubs.length + '</b><span>' + (c.semMetricas ? c.semMetricas + ' sem métricas' : 'no período') + '</span></div>' +
@@ -280,7 +280,8 @@
     h += '<div class="painel"><h2>Últimos vídeos publicados</h2>' + (c.recentes.length ? c.recentes.map(function(x){
       x.porId = c.porId;
       var s = x.s, i = s ? idadeH(x.pub, s) : null;
-      return linhaVideo(x, s ? '<span class="muted" style="white-space:nowrap">' + curto(s.views) + ' views · ' + idadeTxt(i) + ' · ' + rotOrigem(s.origem) + '</span>' : '<span class="muted">sem métricas</span>');
+      var pubTxt = x.pub.publicado_em ? 'publicado ' + new Date(x.pub.publicado_em).toLocaleDateString('pt-BR') : 'sem data';
+      return linhaVideo(x, s ? '<span class="muted" style="white-space:nowrap">' + pubTxt + ' · ' + curto(s.views) + ' views medidas com ' + idadeTxt(i) + ' · ' + rotOrigem(s.origem) + '</span>' : '<span class="muted">' + pubTxt + ' · sem métricas</span>');
     }).join('') : '<div class="vazio">Nenhum vídeo registrado neste filtro. O cadastro de vídeos e métricas chega na próxima etapa.</div>') + '</div>';
 
     return h;
