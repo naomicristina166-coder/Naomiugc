@@ -176,7 +176,7 @@
       S[t] = tudo; delete falta[t];
     }catch(e){ S[t] = []; falta[t] = msgErro(e); }
   }
-  function carregar(){ return Promise.all(TABELAS.map(carregarTabela).concat(window.ModRadar ? [window.ModRadar.carregar()] : [])); }
+  function carregar(){ return Promise.all(TABELAS.map(carregarTabela).concat((window.ModRadar ? [window.ModRadar.carregar()] : []).concat(window.ModInteg ? [window.ModInteg.carregar()] : []))); }
 
   /* ---------- formatação ---------- */
   function n(x){ return x == null ? '—' : Number(x).toLocaleString('pt-BR'); }
@@ -235,6 +235,7 @@
       '<div class="num"><small>Engajamento médio</small><b>' + pctTxt(c.engMedio) + '</b><span>' + (c.engN ? 'interações ÷ views' : 'sem dados') + '</span></div>' +
       '<div class="num"><small>Perfis</small><b>' + c.linhasPerfil.length + '</b><span>' + S.perfis.filter(function(p){ return p.ativo; }).length + ' ativos</span></div>' +
       '<div class="num"><small>Crescendo acima do normal</small><b>' + c.alertas.length + '</b><span>vídeos com até 7 dias</span></div></div>';
+    if(window.ModInteg) h += window.ModInteg.alertas();
     if(window.ModPublicacoes) h += window.ModPublicacoes.painelPendencias();
 
     /* Alertas */
@@ -267,13 +268,14 @@
     h += '<div class="duas iguais"><div class="painel"><h2>Views por semana de publicação</h2>' + graf + '</div><div class="painel"><h2>Desempenho relativo</h2>' + rk + '</div></div>';
 
     /* Perfis */
-    h += '<div class="painel"><h2>Perfis</h2><div class="rolagem"><table><thead><tr><th>Perfil</th><th>Plataforma</th><th>Marca</th><th>Vídeos</th><th>Views</th><th>Mediana por vídeo</th><th>Seguidores</th><th>30 dias</th><th>Atualizado</th><th></th></tr></thead><tbody>' +
+    h += '<div class="painel"><h2>Perfis</h2><div class="rolagem"><table><thead><tr><th>Perfil</th><th>Plataforma</th><th>Marca</th><th>Vídeos</th><th>Views</th><th>Mediana por vídeo</th><th>Seguidores</th><th>30 dias</th><th>Atualizado</th><th>Conexão</th><th></th></tr></thead><tbody>' +
       c.linhasPerfil.map(function(l){
         var p = l.perfil, link = seguro(p.url);
         return '<tr><td><b>' + (link ? '<a href="' + esc(link) + '" target="_blank" rel="noopener">' + esc(p.nome) + '</a>' : esc(p.nome)) + '</b>' + (p.ativo ? '' : ' <span class="ex">Pausado</span>') + '</td>' +
           '<td>' + esc(nomePlat(p.plataforma)) + '</td><td>' + esc(nomeMarca(p.marca_id)) + '</td><td>' + l.videos + '</td><td>' + curto(l.views || null) + '</td><td>' + curto(l.mediana) + '</td>' +
           '<td>' + curto(l.seguidores) + '</td><td>' + (l.delta30 == null ? '<span class="muted" title="Precisa de registros com 30 dias de diferença">—</span>' : (l.delta30 >= 0 ? '+' : '') + n(l.delta30)) + '</td>' +
           '<td>' + (l.atualizado ? dataHora(l.atualizado) : '—') + '</td>' +
+          '<td>' + (window.ModInteg ? window.ModInteg.celula(p) : '') + '</td>' +
           '<td><div class="acoes"><button class="btn mini" data-acao="perfil-seg" data-id="' + esc(p.id) + '">Seguidores</button><button class="ic-btn" data-acao="perfil-editar" data-id="' + esc(p.id) + '" aria-label="Editar perfil">' + ic('editar') + '</button></div></td></tr>';
       }).join('') + '</tbody></table></div><p class="muted" style="margin-top:8px;font-size:.8rem">"Seguidores" registra quantos seguidores o perfil tem hoje. Com registros ao longo do tempo, aparece o crescimento de 30 dias.</p></div>';
 
@@ -285,6 +287,7 @@
       return linhaVideo(x, s ? '<span class="muted" style="white-space:nowrap">' + pubTxt + ' · ' + curto(s.views) + ' views medidas com ' + idadeTxt(i) + ' · ' + rotOrigem(s.origem) + '</span>' : '<span class="muted">' + pubTxt + ' · sem métricas</span>');
     }).join('') : '<div class="vazio">Nenhum vídeo registrado neste filtro. Cadastre na aba Vídeos publicados.</div>') + '</div>';
 
+    if(window.ModInteg) h += window.ModInteg.painelLogs();
     return h;
   }
 
@@ -340,6 +343,7 @@
     ACOES['perfil-seg'] = function(b){ formSeguidores(b.dataset.id); };
     if(window.ModPublicacoes) window.ModPublicacoes.registrar();
     if(window.ModRadar) window.ModRadar.registrar();
+    if(window.ModInteg) window.ModInteg.registrar();
     document.addEventListener('change', function(e){
       var id = e.target.id; if(!id || id.indexOf('c-f-') !== 0) return;
       F[id.slice(4)] = e.target.value; renderizar();
