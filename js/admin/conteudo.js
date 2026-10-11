@@ -219,7 +219,7 @@
     h += filtros();
 
     if(!S.perfis.length){
-      return h + '<div class="vazio"><b>Comece cadastrando os perfis que você administra.</b><br>Um perfil por plataforma (ex.: @marca no Instagram e @marca no TikTok). Depois, na próxima etapa, você vai registrar os vídeos e as views de cada um.</div>';
+      return h + '<div class="vazio"><b>Comece cadastrando os perfis que você administra.</b><br>Um perfil por plataforma (ex.: @marca no Instagram e @marca no TikTok). Depois, registre os vídeos e as views na aba <b>Vídeos publicados</b>.</div>';
     }
 
     var c = calcular(S, F);
@@ -235,6 +235,7 @@
       '<div class="num"><small>Engajamento médio</small><b>' + pctTxt(c.engMedio) + '</b><span>' + (c.engN ? 'interações ÷ views' : 'sem dados') + '</span></div>' +
       '<div class="num"><small>Perfis</small><b>' + c.linhasPerfil.length + '</b><span>' + S.perfis.filter(function(p){ return p.ativo; }).length + ' ativos</span></div>' +
       '<div class="num"><small>Crescendo acima do normal</small><b>' + c.alertas.length + '</b><span>vídeos com até 7 dias</span></div></div>';
+    if(window.ModPublicacoes) h += window.ModPublicacoes.painelPendencias();
 
     /* Alertas */
     if(c.alertas.length){
@@ -282,7 +283,7 @@
       var s = x.s, i = s ? idadeH(x.pub, s) : null;
       var pubTxt = x.pub.publicado_em ? 'publicado ' + new Date(x.pub.publicado_em).toLocaleDateString('pt-BR') : 'sem data';
       return linhaVideo(x, s ? '<span class="muted" style="white-space:nowrap">' + pubTxt + ' · ' + curto(s.views) + ' views medidas com ' + idadeTxt(i) + ' · ' + rotOrigem(s.origem) + '</span>' : '<span class="muted">' + pubTxt + ' · sem métricas</span>');
-    }).join('') : '<div class="vazio">Nenhum vídeo registrado neste filtro. O cadastro de vídeos e métricas chega na próxima etapa.</div>') + '</div>';
+    }).join('') : '<div class="vazio">Nenhum vídeo registrado neste filtro. Cadastre na aba Vídeos publicados.</div>') + '</div>';
 
     return h;
   }
@@ -337,11 +338,16 @@
     ACOES['perfil-novo'] = function(){ formPerfil(); };
     ACOES['perfil-editar'] = function(b){ formPerfil(b.dataset.id); };
     ACOES['perfil-seg'] = function(b){ formSeguidores(b.dataset.id); };
+    if(window.ModPublicacoes) window.ModPublicacoes.registrar();
     document.addEventListener('change', function(e){
       var id = e.target.id; if(!id || id.indexOf('c-f-') !== 0) return;
       F[id.slice(4)] = e.target.value; renderizar();
     });
   }
 
-  window.ModConteudo = {registrar:registrar, carregar:carregar, _calc:{calcular:calcular, mediana:mediana, viewsNaIdade:viewsNaIdade, indexarSnaps:indexarSnaps}};
+  window.ModConteudo = {
+    registrar:registrar, carregar:carregar, F:F, PLAT:PLAT, PERIODOS:PERIODOS, MIN_COMPARAVEIS:MIN_COMPARAVEIS,
+    _calc:{calcular:calcular, mediana:mediana, viewsNaIdade:viewsNaIdade, indexarSnaps:indexarSnaps, idadeH:idadeH, ultimo:ultimo, engajamento:engajamento, relativo:relativo},
+    util:{n:n, curto:curto, dataHora:dataHora, idadeTxt:idadeTxt, rotOrigem:rotOrigem, pctTxt:pctTxt, nomePerfil:nomePerfil, nomePlat:nomePlat, localAgora:localAgora, nomeMarca:nomeMarca}
+  };
 })();
