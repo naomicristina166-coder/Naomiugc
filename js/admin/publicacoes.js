@@ -209,6 +209,7 @@
         {k:'titulo', rot:'Título (para você reconhecer)', cheio:true},
         {k:'url', rot:'Link do vídeo', tipo:'url', cheio:true},
         {k:'gancho', rot:'Gancho (primeira frase ou cena)', tipo:'textarea', linhas:2, cheio:true},
+        {k:'gancho_id', rot:'Gancho da biblioteca (opcional)', tipo:'select', cheio:true, op:[['', 'Nenhum']].concat((S.ganchos || []).map(function(g){ return [g.id, (g.tipo === 'visual' ? '[visual] ' : '') + (g.texto.length > 70 ? g.texto.slice(0, 70) + '…' : g.texto)]; })), dica:'Liga o vídeo ao gancho para medir o resultado dele na Biblioteca de ganchos.'},
         {k:'formato', rot:'Formato', lista:FORMATOS.concat(formatosUsados().filter(function(f){ return FORMATOS.indexOf(f) < 0; }))},
         {k:'duracao_seg', rot:'Duração (segundos)', tipo:'number', passo:'1'},
         {k:'campanha_id', rot:'Campanha (opcional)', tipo:'select', op:[['', 'Nenhuma']].concat(camps.map(function(c){ return [c.id, c.campanha + (c.cliente ? ' · ' + c.cliente : '')]; }))},
@@ -221,6 +222,7 @@
         if(o.duracao_seg !== null && o.duracao_seg < 0){ toast('A duração não pode ser negativa', 'erro'); return false; }
         if(!o.titulo && !o.gancho && !o.url){ toast('Preencha pelo menos o título, o gancho ou o link', 'erro'); return false; }
         o.publicado_em = d.toISOString();
+        if(o.gancho_id && !o.gancho){ var gg = achar('ganchos', o.gancho_id); if(gg && gg.tipo === 'verbal') o.gancho = gg.texto; }
         if(p) return !!(await atualizar('publicacoes', id, o));
         o.origem = 'manual';
         var r = await inserir('publicacoes', o);
