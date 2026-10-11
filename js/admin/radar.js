@@ -144,7 +144,7 @@
   function vRadar(){
     var h = avisoFalta(TABELAS);
     h += '<p class="muted" style="margin-bottom:12px;font-size:.85rem">Referências do nicho Tech UGC para inspirar seus próximos vídeos. Registre só o que é público. Para saber se um vídeo está crescendo <b>agora</b>, registre as views em pelo menos 2 dias diferentes.</p>';
-    h += '<div class="barra"><input type="search" id="rd-busca" placeholder="Buscar por tema, @, gancho..." aria-label="Buscar referências" value="' + esc(R.busca) + '">' +
+    h += '<div class="barra"><input type="search" id="rd-busca" style="flex:1 1 220px;min-width:180px" placeholder="Buscar por tema, @, gancho..." aria-label="Buscar referências" value="' + esc(R.busca) + '">' +
       sel('rd-cat', 'Todas as categorias', usados(S.referencias, 'categoria', CAT_RADAR), R.cat) +
       sel('rd-fmt', 'Todos os formatos', usados(S.referencias, 'formato', FORMATOS), R.fmt) +
       sel('rd-plat', 'Todas as plataformas', PLAT_R, R.plat) +
@@ -246,7 +246,9 @@
     var r = achar('referencias', id); if(!r) return;
     var v = velocidade(r), obs = obsDe(r.id).slice().reverse(), link = seguro(r.url);
     var campo = function(rot, val){ return val ? '<div style="margin-bottom:10px"><div class="muted" style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em">' + rot + '</div><div style="white-space:pre-wrap">' + esc(val) + '</div></div>' : ''; };
-    var corpo = '<p style="margin-bottom:12px">' + (link ? '<a href="' + esc(link) + '" target="_blank" rel="noopener noreferrer">Abrir o vídeo</a> · ' : '') + esc([r.perfil, nomePlatR(r.plataforma), r.categoria, r.formato].filter(Boolean).join(' · ')) + (r.publicado_em ? ' · publicado em ' + dataBr(soData(r.publicado_em)) : '') + '</p>' +
+    var partes = [r.perfil, nomePlatR(r.plataforma), r.categoria, r.formato, r.publicado_em ? 'publicado em ' + dataBr(soData(r.publicado_em)) : ''].filter(Boolean).map(esc);
+    if(link) partes.unshift('<a href="' + esc(link) + '" target="_blank" rel="noopener noreferrer">Abrir o vídeo</a>');
+    var corpo = '<p style="margin-bottom:12px">' + partes.join(' · ') + '</p>' +
       '<div class="painel" style="margin-bottom:12px"><span class="pilula ' + COR_VEL[v.st] + '">' + v.rot + '</span> <span style="font-size:.88rem">' + esc(v.txt) + '</span></div>' +
       campo('Tema', r.tema) + campo('Gancho verbal', r.gancho_verbal) + campo('Gancho visual', r.gancho_visual) + campo('Introdução', r.introducao) +
       campo('Formato narrativo', r.formato_narrativo) + campo('Ritmo de edição', r.ritmo_edicao) + campo('Texto na tela', r.texto_tela) +
@@ -291,7 +293,7 @@
     var h = avisoFalta(TABELAS.concat(['publicacoes']));
     var semLigar = S.publicacoes.filter(function(p){ return p.gancho && !p.gancho_id; }).length;
     h += '<p class="muted" style="margin-bottom:12px;font-size:.85rem">Seus ganchos e os das referências, organizados por tipo. O resultado de cada um vem dos vídeos em que você usou, comparados com o normal do perfil.</p>';
-    h += '<div class="barra"><input type="search" id="gc-busca" placeholder="Buscar gancho" aria-label="Buscar ganchos" value="' + esc(G.busca) + '">' +
+    h += '<div class="barra"><input type="search" id="gc-busca" style="flex:1 1 220px;min-width:180px" placeholder="Buscar gancho" aria-label="Buscar ganchos" value="' + esc(G.busca) + '">' +
       sel('gc-cat', 'Todas as categorias', [['__sem','Sem categoria']].concat(usados(S.ganchos, 'categoria', CAT_GANCHO).map(function(x){ return [x, x]; })), G.cat) +
       sel('gc-tipo', 'Verbal e visual', [['verbal','Verbal'],['visual','Visual']], G.tipo) +
       sel('gc-orig', 'Todas as origens', [['meu','Meus vídeos'],['referencia','Referências'],['ideia','Ideias']], G.orig) +
