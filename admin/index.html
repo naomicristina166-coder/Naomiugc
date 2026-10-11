@@ -9,9 +9,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3"></script>
 <script src="../js/banco.js"></script>
 <script src="../js/biblioteca.js"></script>
+<script src="../js/admin/conteudo.js"></script>
 <style>
 :root{
   --bg:#EDE8D0; --card:#f7f3e2; --alt:#e4dcbf; --line:#cfc19a;
@@ -257,6 +258,8 @@ textarea.roteiro{min-height:130px;margin-bottom:14px}
       <div class="grupo">Início</div>
       <button class="item" data-acao="ir" data-aba="painel"><span data-ic="painel"></span>Painel</button>
       <button class="item" data-acao="ir" data-aba="objetivos"><span data-ic="objetivos"></span>Objetivos</button>
+      <div class="grupo">UGC Tech Canvas</div>
+      <button class="item" data-acao="ir" data-aba="desempenho"><span data-ic="desempenho"></span>Desempenho</button>
       <div class="grupo">Meu site</div>
       <button class="item" data-acao="ir" data-aba="portfolio"><span data-ic="portfolio"></span>Portfólio</button>
       <button class="item" data-acao="ir" data-aba="marcas"><span data-ic="marcas"></span>Marcas</button>
@@ -1230,6 +1233,7 @@ var ACOES = {
   'nicho-sel':function(b){ E.chk.nicho = Number(b.dataset.i); renderizar(); },
   'rev-limpar':function(){ E.chk.rev = {}; var t = ($('#roteiro-txt') || {}).value; renderizar(); var n = $('#roteiro-txt'); if(n) n.value = t || ''; }
 };
+if(window.ModConteudo) window.ModConteudo.registrar();
 document.addEventListener('click', function(e){
   var b = e.target.closest('[data-acao]');
   if(b){ var f = ACOES[b.dataset.acao]; if(f){ e.stopPropagation(); f(b, e); } return; }
@@ -1286,7 +1290,7 @@ async function iniciar(sessao){
   document.body.classList.remove('checando');
   $('#conteudo').innerHTML = '<div class="vazio">Carregando os seus dados...</div>';
   document.querySelectorAll('.item').forEach(function(b){ if(b.dataset.aba === E.aba) b.setAttribute('aria-current', 'page'); });
-  await Promise.all(['videos', 'marcas', 'calendario', 'campanhas', 'marcados', 'visitas', 'metas', 'projetos', 'carrosseis', 'prospeccao_envios'].map(carregar));
+  await Promise.all(['videos', 'marcas', 'calendario', 'campanhas', 'marcados', 'visitas', 'metas', 'projetos', 'carrosseis', 'prospeccao_envios'].map(carregar).concat(window.ModConteudo ? [window.ModConteudo.carregar()] : []));
   renderizar();
 }
 </script>
