@@ -143,6 +143,7 @@
 
   function vRadar(){
     var h = avisoFalta(TABELAS);
+    if(window.ModPesquisa) h += window.ModPesquisa.painel();
     h += '<p class="muted" style="margin-bottom:12px;font-size:.85rem">Referências do nicho Tech UGC para inspirar seus próximos vídeos. Registre só o que é público. Para saber se um vídeo está crescendo <b>agora</b>, registre as views em pelo menos 2 dias diferentes.</p>';
     h += '<div class="barra"><input type="search" id="rd-busca" style="flex:1 1 220px;min-width:180px" placeholder="Buscar por tema, @, gancho..." aria-label="Buscar referências" value="' + esc(R.busca) + '">' +
       sel('rd-cat', 'Todas as categorias', usados(S.referencias, 'categoria', CAT_RADAR), R.cat) +
@@ -192,6 +193,7 @@
       {k:'texto_tela', rot:'Texto na tela', tipo:'textarea', linhas:2, cheio:true},
       {k:'demo_app', rot:'Como o app é demonstrado', tipo:'textarea', linhas:2, cheio:true},
       {k:'cta', rot:'Chamada para ação', tipo:'textarea', linhas:2, cheio:true},
+      {k:'transcricao', rot:'Transcrição (o que é falado)', tipo:'textarea', linhas:4, cheio:true, dica:'Cole aqui a transcrição ou a legenda automática do vídeo (YouTube: "Mostrar transcrição"; TikTok/Instagram: legendas).'},
       {k:'hipoteses', rot:'Hipóteses: por que pode ter funcionado', tipo:'textarea', linhas:3, cheio:true, dica:'São hipóteses, não certezas. Ex.: "mostra o resultado antes de explicar".'},
       {k:'obs', rot:'Observação', tipo:'textarea', linhas:2, cheio:true},
       {k:'favorito', rot:'Favorita', tipo:'checkbox', cheio:true}
@@ -252,13 +254,13 @@
       '<div class="painel" style="margin-bottom:12px"><span class="pilula ' + COR_VEL[v.st] + '">' + v.rot + '</span> <span style="font-size:.88rem">' + esc(v.txt) + '</span></div>' +
       campo('Tema', r.tema) + campo('Gancho verbal', r.gancho_verbal) + campo('Gancho visual', r.gancho_visual) + campo('Introdução', r.introducao) +
       campo('Formato narrativo', r.formato_narrativo) + campo('Ritmo de edição', r.ritmo_edicao) + campo('Texto na tela', r.texto_tela) +
-      campo('Demonstração do app', r.demo_app) + campo('Chamada para ação', r.cta) + campo('Hipóteses (não confirmadas)', r.hipoteses) + campo('Observação', r.obs);
+      campo('Demonstração do app', r.demo_app) + campo('Chamada para ação', r.cta) + campo('Hipóteses (não confirmadas)', r.hipoteses) + campo('Transcrição', r.transcricao) + campo('Observação', r.obs);
     corpo += '<h3 style="font-size:.9rem;margin:14px 0 6px">Observações de views</h3>' + (obs.length
       ? '<div class="rolagem"><table style="min-width:520px"><thead><tr><th>Data</th><th>Views</th><th>Curtidas</th><th>Coment.</th><th>Compart.</th><th></th></tr></thead><tbody>' + obs.map(function(s){
           return '<tr><td>' + U().dataHora(s.observado_em) + '</td><td><b>' + n(s.views) + '</b></td><td>' + n(s.curtidas) + '</td><td>' + n(s.comentarios) + '</td><td>' + n(s.compartilhamentos) + '</td><td><button class="ic-btn perigo" data-acao="radar-obs-apagar" data-id="' + esc(s.id) + '" data-ref="' + esc(r.id) + '" aria-label="Apagar observação">' + ic('lixo') + '</button></td></tr>';
         }).join('') + '</tbody></table></div>'
       : '<div class="vazio">Nenhuma observação ainda.</div>');
-    corpo += '<div class="m-acoes"><button class="btn" data-acao="radar-gancho" data-id="' + esc(r.id) + '"' + (r.gancho_verbal || r.gancho_visual ? '' : ' disabled title="Preencha o gancho na ficha antes"') + '>Salvar gancho na biblioteca</button><span class="espaco"></span>' +
+    corpo += '<div class="m-acoes"><button class="btn" data-acao="radar-analisar" data-id="' + esc(r.id) + '">Analisar com o Claude</button><button class="btn" data-acao="radar-gancho" data-id="' + esc(r.id) + '"' + (r.gancho_verbal || r.gancho_visual ? '' : ' disabled title="Preencha o gancho na ficha antes"') + '>Salvar gancho na biblioteca</button><span class="espaco"></span>' +
       '<button class="btn" data-acao="radar-editar" data-id="' + esc(r.id) + '">Editar ficha</button><button class="btn cheio" data-acao="radar-obs" data-id="' + esc(r.id) + '">+ Views de hoje</button></div>';
     modal(r.titulo || r.tema || 'Referência', corpo, true);
   }

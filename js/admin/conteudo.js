@@ -346,6 +346,7 @@
     if(window.ModInteg) window.ModInteg.registrar();
     if(window.ModRelatorios) window.ModRelatorios.registrar();
     if(window.ModIdeias) window.ModIdeias.registrar();
+    if(window.ModPesquisa) window.ModPesquisa.registrar();
     document.addEventListener('change', function(e){
       var id = e.target.id; if(!id || id.indexOf('c-f-') !== 0) return;
       F[id.slice(4)] = e.target.value; renderizar();
