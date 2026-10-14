@@ -176,7 +176,7 @@
       S[t] = tudo; delete falta[t];
     }catch(e){ S[t] = []; falta[t] = msgErro(e); }
   }
-  function carregar(){ return Promise.all(TABELAS.map(carregarTabela).concat((window.ModRadar ? [window.ModRadar.carregar()] : []).concat(window.ModInteg ? [window.ModInteg.carregar()] : []).concat(window.ModRelatorios ? [window.ModRelatorios.carregar()] : []))); }
+  function carregar(){ return Promise.all(TABELAS.map(carregarTabela).concat((window.ModRadar ? [window.ModRadar.carregar()] : []).concat(window.ModInteg ? [window.ModInteg.carregar()] : []).concat(window.ModRelatorios ? [window.ModRelatorios.carregar()] : []).concat(window.ModIdeias ? [window.ModIdeias.carregar()] : []))); }
 
   /* ---------- formatação ---------- */
   function n(x){ return x == null ? '—' : Number(x).toLocaleString('pt-BR'); }
@@ -345,6 +345,7 @@
     if(window.ModRadar) window.ModRadar.registrar();
     if(window.ModInteg) window.ModInteg.registrar();
     if(window.ModRelatorios) window.ModRelatorios.registrar();
+    if(window.ModIdeias) window.ModIdeias.registrar();
     document.addEventListener('change', function(e){
       var id = e.target.id; if(!id || id.indexOf('c-f-') !== 0) return;
       F[id.slice(4)] = e.target.value; renderizar();
